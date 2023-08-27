@@ -12,5 +12,9 @@ sqlcgen:
 	docker run --rm -v ${pwd}:/src -w /src kjconroy/sqlc generate
 test:
 	go test -v -cover ./...
+server:
+	go run main.go
+mockdb:
+	mockgen -package mockdb  -destination db/mock/store.go  github.com/MohammadZeyaAhmad/Bank-App/db/sqlc Store
 .PHONY:
-	postgres createdb dropdb migrateup migratedown sqlcgen test 
+	postgres createdb dropdb migrateup migratedown sqlcgen test server mockdb
