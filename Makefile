@@ -5,9 +5,9 @@ createdb:
 dropdb:
 	docker exec -it bank dropdb bank
 migrateup:
-	migrate -path db/migration -database "postgresql://root:8084689296@localhost:5432/bank?sslmode=disable" -verbose up
+	migrate -path db/migration -database "postgresql://root:Ng4iHN2A7es0hGsfrpQY@bank-db.c3pvcgxp5zez.ap-northeast-1.rds.amazonaws.com/bank_db" -verbose up
 migratedown:
-	migrate -path db/migration -database "postgresql://root:8084689296@localhost:5432/bank?sslmode=disable" -verbose down
+	migrate -path db/migration -database "postgresql://root:Ng4iHN2A7es0hGsfrpQY@bank-db.c3pvcgxp5zez.ap-northeast-1.rds.amazonaws.com/bank_db -verbose down
 sqlcgen:
 	docker run --rm -v ${pwd}:/src -w /src kjconroy/sqlc generate
 test:
