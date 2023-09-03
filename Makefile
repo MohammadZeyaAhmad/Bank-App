@@ -1,5 +1,5 @@
 postgres:
-	docker run -p 5432:5432 --name bank -e POSTGRES_USER=root -e POSTGRES_PASSWORD=8084689296 -d postgres:12-alpine
+	docker run -p 5432:5432 --name bank -e POSTGRES_USER=root -e POSTGRES_PASSWORD=8084689296 -d postgres:14-alpine
 createdb:
 	docker exec -it bank createdb --username=root --owner=root bank
 dropdb:
@@ -16,5 +16,11 @@ server:
 	go run main.go
 mockdb:
 	mockgen -package mockdb  -destination db/mock/store.go  github.com/MohammadZeyaAhmad/Bank-App/db/sqlc Store
+proto:
+	rm -f pb/*.go
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+	--go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	proto/*.proto
 .PHONY:
-	postgres createdb dropdb migrateup migratedown sqlcgen test server mockdb
+	postgres createdb dropdb migrateup migratedown sqlcgen test server mockdb proto
