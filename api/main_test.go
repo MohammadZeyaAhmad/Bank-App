@@ -7,7 +7,9 @@ import (
 
 	db "github.com/MohammadZeyaAhmad/Bank-App/db/sqlc"
 	"github.com/MohammadZeyaAhmad/Bank-App/util"
+	"github.com/MohammadZeyaAhmad/Bank-App/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,8 +18,12 @@ func newTestServer(t *testing.T, store db.Store) *Server {
 		TokenSymmetricKey:   util.RandomString(32),
 		AccessTokenDuration: time.Minute,
 	}
-
-	server, err := NewServer(config, store)
+   redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+   
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+	server, err := NewServer(config, store,taskDistributor)
 	require.NoError(t, err)
 
 	return server

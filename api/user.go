@@ -2,13 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
 	db "github.com/MohammadZeyaAhmad/Bank-App/db/sqlc"
 	"github.com/MohammadZeyaAhmad/Bank-App/util"
+	"github.com/MohammadZeyaAhmad/Bank-App/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 )
 
@@ -57,15 +60,34 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
+ 
 
-	arg := db.CreateUserParams{
-		Username:       req.Username,
-		HashedPassword: hashedPassword,
-		FullName:       req.FullName,
-		Email:          req.Email,
+	arg := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       req.Username,
+			HashedPassword: hashedPassword,
+			FullName:       req.FullName,
+			Email:          req.Email,
+		},
+		AfterCreate: func(user db.User) error {
+			taskPayload := &worker.PayloadSendVerifyEmail{
+				Username: user.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+
+			return server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+		},
 	}
 
-	user, err := server.store.CreateUser(ctx, arg)
+	txResult, err := server.store.CreateUserTx(ctx, arg)
+	if err != nil {
+      ctx.JSON(http.StatusInternalServerError,errResponse(err))
+	}
+	
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -78,6 +100,21 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	taskPayload := &worker.PayloadSendVerifyEmail{
+				Username: req.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+
+  err= server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+  if(err != nil){
+	log.Fatal("failed to send verification mail %v", err)
+  }
+
+  user:=txResult.User
 	rsp := createUserResponse{
 		Username:          user.Username,
 		FullName:          user.FullName,

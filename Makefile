@@ -4,6 +4,8 @@ createdb:
 	docker exec -it bank createdb --username=root --owner=root bank
 dropdb:
 	docker exec -it bank dropdb bank
+new_migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
 migrateup:
 	migrate -path db/migration -database "postgresql://root:Ng4iHN2A7es0hGsfrpQY@bank-db.c3pvcgxp5zez.ap-northeast-1.rds.amazonaws.com/bank_db" -verbose up
 migratedown:
@@ -22,5 +24,8 @@ proto:
 	--go-grpc_out=pb --go-grpc_opt=paths=source_relative \
 	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
 	proto/*.proto
+
+redis:
+	docker run --name redis -p 6379:6379 -d redis:7-alpine
 .PHONY:
-	postgres createdb dropdb migrateup migratedown sqlcgen test server mockdb proto
+	postgres createdb dropdb migrateup migratedown sqlcgen test server mockdb proto redis new_migration
