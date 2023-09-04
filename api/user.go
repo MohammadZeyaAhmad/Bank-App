@@ -111,7 +111,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 
   err= server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
   if(err != nil){
-	log.Fatal("failed to send verification mail %v", err)
+	log.Fatal("failed to send verification mail ")
   }
 
   user:=txResult.User
