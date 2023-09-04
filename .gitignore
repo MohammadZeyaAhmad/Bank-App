@@ -1,2 +1,7 @@
 /.vscode
 app.env
+/pb
+/gapi
+/proto
+/val
+/tools
