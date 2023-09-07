@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: bank-api
-        image: 471205383530.dkr.ecr.ap-northeast-1.amazonaws.com/bank
+        image: 471205383530.dkr.ecr.ap-northeast-1.amazonaws.com/bank:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
